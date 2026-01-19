@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미리 꼼꼼이의 대출 생각 나누기</title>
+    <style>
+        :root { --primary: #0071e3; --bg: #f5f5f7; --card: #ffffff; --text: #1d1d1f; --red: #ff3b30; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: var(--card); padding: 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 550px; position: relative; }
+        .character-area { position: absolute; top: -10px; left: -20px; z-index: 20; transform: rotate(-15deg); }
+        .char-icon { font-size: 50px; margin-bottom: -15px; margin-left: 25px; filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2)); }
+        .owner-badge { background: #ffcc00; color: #000; padding: 8px 35px; font-size: 16px; font-weight: 900; border: 2px solid #000; border-radius: 5px; box-shadow: 3px 3px 0px #000; }
+        
+        h2 { text-align: center; margin-top: 50px; font-size: 22px; color: #1d1d1f; }
+        
+        .tab-container { display: flex; background: #f2f2f7; padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 8px; font-size: 14px; font-weight: bold; color: #86868b; transition: 0.2s; }
+        .tab.active { background: white; color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        .section { background: #f9f9fb; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #efeff4; }
+        .input-group { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .input-group:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+        label { display: block; margin-bottom: 10px; font-weight: 700; font-size: 15px; color: #333; }
+        input { width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 17px; box-sizing: border-box; outline: none; background: white; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0,113,227,0.1); }
+        
+        .ko-read { font-size: 13px; color: var(--primary); margin-top: 8px; font-weight: 700; border-left: 3px solid var(--primary); padding-left: 10px; min-height: 18px; }
+        .income-report { background: #eef7ff; padding: 12px; border-radius: 10px; margin-top: 10px; font-size: 13px; color: #0056b3; font-weight: bold; border: 1px solid #cce5ff; }
+
+        .btn-detail { width: 100%; padding: 12px; background: #f2f2f7; border: none; border-radius: 12px; color: var(--primary); font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 14px; }
+        
+        .dual-input { display: flex; align-items: center; gap: 10px; }
+        .dual-input input[type="range"] { flex: 1; }
+        .dual-input input[type="number"] { width: 80px; text-align: center; }
+
+        .result-box { background: #1d1d1f; color: white; padding: 25px; border-radius: 20px; margin-top: 10px; }
+        .highlight { color: #00d2ff; font-weight: 800; font-size: 26px; }
+        .sub-label { color: #aaa; font-size: 12px; }
+
+        .reverse-box { background: #2c2c2e; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #444; }
+        
+        .schedule-toggle { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .schedule-area { margin-top: 15px; overflow-x: auto; max-height: 350px; border: 1px solid #eee; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; min-width: 400px; }
+        th { background: #f2f2f7; padding: 10px; position: sticky; top: 0; border-bottom: 2px solid #d2d2d7; color: black; }
+        td { padding: 10px; border-bottom: 1px solid #efeff4; text-align: right; }
+        .passed-row { background: #fff9e6; color: #d4a017; font-weight: bold; }
+        
+        .email-btn { width: 100%; padding: 15px; background: #5856d6; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .hidden { display: none !important; }
+        .footer { text-align: center; font-size: 12px; color: #86868b; margin-top: 25px; padding-bottom: 20px; }
+
+        /* [추가] 경고 문구 스타일 */
+        .warning-msg { color: var(--red); font-size: 13px; font-weight: bold; margin-top: 8px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="character-area"><div class="char-icon">👧</div><div class="owner-badge">꼼꼼이</div></div>
+    <h2>🏠 주택담보 대출한도 미리보기</h2>
+
+    <div class="tab-container">
+        <div id="tab-non" class="tab active" onclick="switchTab('non')">무소득(카드)</div>
+        <div id="tab-worker" class="tab" onclick="switchTab('worker')">직장인(연봉)</div>
+    </div>
+
+    <div class="section">
+        <div class="input-group">
+            <label id="income-label">연간 카드 사용액 (만원)</label>
+            <input type="number" id="incomeInput" value="2500" oninput="calculate()">
+            <div id="incomeKo" class="ko-read"></div>
+            <div id="estIncomeReport" class="income-report">은행 55% 인정 추정 연소득: 약 4,545만 원</div>
+        </div>
+        
+        <div class="input-group">
+            <label>담보 주택 가격 (만원)</label>
+            <input type="number" id="housePrice" value="50000" oninput="calculate()">
+            <div id="houseKo" class="ko-read"></div>
+        </div>
+        
+        <div class="input-group">
+            <label>기본 대출 금리 (%)</label>
+            <input type="number" id="rate" value="4.5" step="0.1" oninput="calculate()">
+        </div>
+    </div>
+
+    <button class="btn-detail" onclick="toggleDetail()">🔍 더 자세한 설정 (기간/거치/상황체크)</button>
+
+    <div id="detail-section" class="hidden">
+        <div class="section">
+            <label>대출 상환 기간 (년)</label>
+            <div class="dual-input">
+                <input type="range" id="termRange" min="1" max="50" value="30" oninput="syncTerm('range')">
+                <input type="number" id="termNum" value="30" oninput="syncTerm('num')">
+                <span style="font-weight:bold; font-size:14px;">년</span>
+            </div>
+            <div class="input-group" style="margin-top:20px; border-bottom:none;">
+                <label>거치 기간 (이자만 내는 개월수)</label>
+                <input type="number" id="graceMonths" value="0" oninput="calculate()">
+            </div>
+            <div class="input-group" style="border-bottom:none;">
+                <label>!!(필수) 기존에 받은 다른 대출 상환중인 금액 적기(연간/만원)</label>
+                <input type="number" id="existingLoan" value="0" oninput="calculate()">
+                <div id="existingKo" class="ko-read"></div>
+            </div>
+            <div style="color: #d70000; font-weight: bold; font-size: 13px; background:#fff2f2; padding:12px; border-radius:12px;">
+                <input type="checkbox" id="stressCheck" onchange="calculate()"> 스트레스 금리 반영 (+1.2%)
+            </div>
+        </div>
+
+        <div class="section" style="border: 2px dashed #0071e3; background: #f0f7ff;">
+            <label>📊 지금 내 상황은? (경과 확인)</label>
+            <input type="number" id="passedMonths" placeholder="지금까지 몇 회차 갚으셨나요?" oninput="calculate()">
+            <div id="progressReport" style="font-size:13px; margin-top:10px; line-height:1.6; color:#0056b3;"></div>
+        </div>
+    </div>
+
+    <div class="result-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <span class="sub-label">최종 대출 한도 (DSR·LTV 최저값)</span>
+            <span id="maxLimitText" class="highlight">0 만원</span>
+        </div>
+        <div id="maxKo" style="text-align:right; font-size:13px; color:#00d2ff; font-weight:bold; margin-bottom:15px;"></div>
+        
+        <div style="border-top:1px solid #444; padding-top:15px; margin-top:5px;">
+            <label style="color:#00d2ff; font-size:12px;">💸 실제 빌리고 싶은 금액 (만원)</label>
+            <input type="number" id="applyAmount" value="20000" oninput="calculate()" style="background:#333; color:white; border:1px solid #555; width:100%; padding:10px; border-radius:8px;">
+            <div id="applyKo" class="ko-read" style="color:#00d2ff; border-left-color:#00d2ff;"></div>
+            <div id="limitWarning" class="warning-msg">⚠️ 한도를 초과했습니다! 희망 금액을 낮춰보세요.</div>
+        </div>
+
+        <div id="repayDetail" style="margin-top:15px; font-size:14px; line-height:1.8;"></div>
+
+        <div class="reverse-box">
+            <label style="color:#ffcc00; font-size:12px;">📅 역산: 매달 이 정도만 갚는다면?(단위 :만원)</label>
+            <input type="number" id="myAbility" value="150" oninput="calculate()" style="background:#444; color:white; border:none; width:100%; padding:10px; border-radius:6px; margin-top:5px;">
+            <div id="reverseResult" style="margin-top:10px; color:#ffcc00; font-weight:bold; font-size:14px; line-height:1.4;"></div>
+        </div>
+    </div>
+
+    <button class="schedule-toggle" onclick="toggleSchedule()">🗓️ 상환 스케줄표 (잔액 확인하기)</button>
+    <div id="scheduleArea" class="schedule-area hidden">
+        <table>
+            <thead><tr><th>회차</th><th>원리금</th><th>원금</th><th>이자</th><th>잔액</th></tr></thead>
+            <tbody id="scheduleBody"></tbody>
+        </table>
+    </div>
+
+    <button class="email-btn" onclick="shareThoughts()">✉️ 이 결과 공유하고 의견 나누기</button>
+
+    <div class="footer"><b>미리 꼼꼼이와 함께하는 대출 수다</b></div>
+</div>
+
+<script>
+let currentMode = 'non';
+
+function convertKo(n) {
+    if(!n || n==0) return "0원";
+    let ok = Math.floor(n/10000); let man = Math.floor(n%10000);
+    return (ok > 0 ? ok + "억 " : "") + (man > 0 ? man.toLocaleString() + "만" : "") + " 원";
+}
+
+function switchTab(m) {
+    currentMode = m;
+    document.getElementById('tab-non').className = m === 'non' ? 'tab active' : 'tab';
+    document.getElementById('tab-worker').className = m === 'worker' ? 'tab active' : 'tab';
+    document.getElementById('income-label').innerText = m === 'non' ? '연간 카드 사용액 (만원)' : '본인 세전 연봉 (만원)';
+    calculate();
+}
+
+function syncTerm(from) {
+    const r = document.getElementById('termRange'); const n = document.getElementById('termNum');
+    if(from === 'range') n.value = r.value; else r.value = n.value;
+    calculate();
+}
+
+function toggleDetail() { document.getElementById('detail-section').classList.toggle('hidden'); }
+function toggleSchedule() { document.getElementById('scheduleArea').classList.toggle('hidden'); }
+
+function calculate() {
+    const rawIncome = parseFloat(document.getElementById('incomeInput').value) || 0;
+    let income = currentMode === 'non' ? (rawIncome / 0.55) : rawIncome;
+    
+    const estBox = document.getElementById('estIncomeReport');
+    if(currentMode === 'non') {
+        estBox.classList.remove('hidden');
+        estBox.innerText = `은행 인정 추정 연소득: 약 ${convertKo(Math.floor(income))}`;
+    } else {
+        estBox.classList.add('hidden');
+    }
+
+    let baseRate = parseFloat(document.getElementById('rate').value) || 0;
+    if(document.getElementById('stressCheck').checked) baseRate += 1.2;
+    
+    const r = (baseRate / 100) / 12;
+    const n = (parseInt(document.getElementById('termNum').value) || 1) * 12;
+    const grace = parseInt(document.getElementById('graceMonths').value) || 0;
+    const applyMan = parseFloat(document.getElementById('applyAmount').value) || 0;
+    const existing = parseFloat(document.getElementById('existingLoan').value) || 0;
+
+    document.getElementById('incomeKo').innerText = "입력금액: " + convertKo(rawIncome);
+    document.getElementById('houseKo').innerText = "입력금액: " + convertKo(document.getElementById('housePrice').value);
+    document.getElementById('existingKo').innerText = "입력금액: " + convertKo(existing);
+    document.getElementById('applyKo').innerText = "입력금액: " + convertKo(applyMan);
+
+    const dsrLimit = r > 0 ? ((income * 0.4 - existing) / 12) * ((1 - Math.pow(1 + r, -(n - grace))) / r) : 0;
+    const ltvLimit = (document.getElementById('housePrice').value || 0) * 0.7;
+    const finalMax = Math.max(0, Math.min(dsrLimit, ltvLimit));
+    
+    document.getElementById('maxLimitText').innerText = Math.floor(finalMax).toLocaleString() + " 만원";
+    document.getElementById('maxKo').innerText = "최종 한도: 약 " + convertKo(Math.floor(finalMax));
+
+    /* [추가된 한도 체크 로직] */
+    const warningMsg = document.getElementById('limitWarning');
+    const applyKo = document.getElementById('applyKo');
+    if (applyMan > finalMax && finalMax > 0) {
+        warningMsg.style.display = 'block';
+        applyKo.style.color = '#ff3b30';
+        applyKo.style.borderLeftColor = '#ff3b30';
+    } else {
+        warningMsg.style.display = 'none';
+        applyKo.style.color = '#00d2ff';
+        applyKo.style.borderLeftColor = '#00d2ff';
+    }
+
+    const repayDiv = document.getElementById('repayDetail');
+    const body = document.getElementById('scheduleBody');
+    body.innerHTML = "";
+    
+    if(applyMan > 0 && r > 0) {
+        const monthlyRepay = (applyMan * 10000 * r * Math.pow(1 + r, n - grace)) / (Math.pow(1 + r, n - grace) - 1);
+        if(grace > 0) {
+            repayDiv.innerHTML = `<div style="display:flex; justify-content:space-between;"><span>거치 중(이자)</span><span>${Math.floor(applyMan*10000*r).toLocaleString()} 원</span></div>
+                                 <div style="display:flex; justify-content:space-between;"><span>거치 후(원리금)</span><span style="color:#ff3b30; font-weight:bold;">${Math.floor(monthlyRepay).toLocaleString()} 원</span></div>`;
+        } else {
+            repayDiv.innerHTML = `<div style="display:flex; justify-content:space-between;"><span>매달 상환할 돈</span><span style="color:#ff3b30; font-weight:bold;">${Math.floor(monthlyRepay).toLocaleString()} 원</span></div>`;
+        }
+
+        let bal = applyMan * 10000;
+        let cumInt = 0;
+        const passed = parseInt(document.getElementById('passedMonths').value) || 0;
+
+        for(let i=1; i<=n; i++) {
+            let int = bal * r;
+            let pri = (i <= grace) ? 0 : monthlyRepay - int;
+            bal -= pri;
+            cumInt += int;
+            let row = document.createElement('tr');
+            if(i === passed) row.className = "passed-row";
+            row.innerHTML = `<td>${i}회</td><td>${Math.floor(i<=grace?int:monthlyRepay).toLocaleString()}</td><td>${Math.floor(pri).toLocaleString()}</td><td>${Math.floor(int).toLocaleString()}</td><td>${Math.floor(Math.max(0, bal)).toLocaleString()}</td>`;
+            body.appendChild(row);
+            if(i === passed) {
+                document.getElementById('progressReport').innerHTML = `📌 <b>현재 진행 리포트</b><br>남은 빚: <b>${convertKo(Math.floor(bal/10000))}</b><br>지금까지 낸 이자만: <b>${convertKo(Math.floor(cumInt/10000))}</b>`;
+            }
+        }
+        if(!passed) document.getElementById('progressReport').innerHTML = "";
+    }
+
+    const abilityM = (parseFloat(document.getElementById('myAbility').value) || 0) * 10000;
+    const revRes = document.getElementById('reverseResult');
+    if(applyMan > 0 && abilityM > (applyMan * 10000 * r)) {
+        const revN = -Math.log(1 - (applyMan * 10000 * r) / abilityM) / Math.log(1 + r);
+        const ry = Math.floor(revN/12); const rm = Math.ceil(revN%12);
+        revRes.innerHTML = `➔ ${ry}년 ${rm}개월 후 빚 탈출!<br>(총 이자 예상: ${convertKo(Math.floor((abilityM*revN - applyMan*10000)/10000))})`;
+    } else if(applyMan > 0) {
+        revRes.innerHTML = "⚠️ 내는 돈이 이자보다 적어요!";
+    }
+}
+
+function shareThoughts() {
+    const email = prompt("이 계산 결과를 함께 보고 싶은 분의 이메일이나 본인의 이메일을 입력하세요:");
+    if(email) {
+        alert("성공적으로 전달되었습니다! 이제 이 내용을 바탕으로 즐겁게 의견을 나눠보세요. 😊");
+    }
+}
+
+calculate();
+</script>
+</body>
+</html>
